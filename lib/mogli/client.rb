@@ -6,6 +6,7 @@ module Mogli
     attr_reader :access_token
     attr_reader :default_params
     attr_reader :expiration
+    attr_reader :options
 
     include HTTParty
     include Mogli::Client::Event
@@ -34,12 +35,20 @@ module Mogli
       "https://api.facebook.com/method/fql.multiquery"
     end
 
-    def initialize(access_token = nil,expiration=nil)
+    def initialize(access_token = nil,expiration=nil,*opts)
       @access_token = access_token
       # nil expiration means extended access
       expiration = Time.now.to_i + 10*365*24*60*60 if expiration.nil? or expiration == 0
       @expiration = Time.at(expiration)
       @default_params = @access_token ? {:access_token=>access_token} : {}
+      options = opts or {
+        :request_timeout => 5
+      }
+    end
+
+    def options=(hash)
+      @options = hash
+      default_timeout(@options[:request_timeout]) if @options[:request_timeout].present?
     end
 
     def expired?
